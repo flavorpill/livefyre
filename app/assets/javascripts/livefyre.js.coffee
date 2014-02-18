@@ -64,14 +64,12 @@ utils = (options) ->
              @popup = null
         catch err
 
-_initialized = false
-@initLivefyre = (options) ->
-  if _initialized and !options.force
-    throw "Livefyre has already been initialized"
-  _initialized = true
-  e = document.getElementById(options.element_id || "livefyre_comments")
+_global_options = null
+
+fill_element_config = (element, config) ->
+  e = document.getElementById(element)
   if e
-    options.config ||=
+    config ||=
       checksum: e.getAttribute("data-checksum")
       collectionMeta: e.getAttribute("data-collection-meta")
       articleId: e.getAttribute("data-article-id")
@@ -79,20 +77,55 @@ _initialized = false
       postToButtons: JSON.parse(e.getAttribute("data-post-to-buttons"))
       el: e.id
 
-    options.network ||= e.getAttribute("data-network")
-    options.domain  ||= e.getAttribute("data-domain")
-    options.root    ||= e.getAttribute("data-root")
+    config['app'] = e.getAttribute("data-app") if e.getAttribute("data-app")
 
-    returnable = utils(options)
+    _global_options ||=
+      network: e.getAttribute("data-network")
+      domain: e.getAttribute("data-domain")
+      root: e.getAttribute("data-root")
 
-    @FYRE_LOADED_CB = ->
+    config
+  else
+    console.log "Element #{element} was not found"
+    null
+
+_initialized = false
+@initLivefyre = (options) ->
+  if _initialized and !options.force
+    throw "Livefyre has already been initialized"
+  _initialized = true
+
+  options.elements ||=
+    if options.element_id
+      [options.element_id]
+    else
+      ["livefyre_comments"]
+
+  configs =
+    if options.config
+      [options.config]
+    else
+      (null for element in options.elements)
+
+  options.element_configs = (fill_element_config element, configs[i] for element, i in options.elements)
+  options.element_configs = options.element_configs.filter (element_config) -> element_config isnt null
+
+  return null if options.element_configs.length is 0
+
+  returnable = utils(options)
+
+  options.network = options.network || _global_options.network
+  options.root = options.root || _global_options.root
+  options.domain = options.domain || _global_options.domain
+
+  @FYRE_LOADED_CB = ->
       options.preLoad(fyre) if options.preLoad
       opts =
         network: options.network
         authDelegate: options.delegate || defaultDelegate(options)
 
-      console.log options.config
-      fyre.conv.load opts, [options.config], (widget) ->
+      console.log element for element in options.element_configs
+      fyre.conv.load opts, options.element_configs, (widget) ->
         returnable.widget = widget
         token = cookie(options.cookie_name || "livefyre_utoken")
         if token
@@ -101,9 +134,5 @@ _initialized = false
           catch error
             window.console.log "Error logging in:", e if window.console
 
-    unless options.manualLoad
-      element = load "http://#{options.root}/wjs/v3.0/javascripts/livefyre.js", null, {"data-lf-domain": options.network}
-    returnable
-
-  else
-    null
+  unless options.manualLoad
+    element = load "http://#{options.root}/wjs/v3.0/javascripts/livefyre.js", null, {"data-lf-domain": options.network}
