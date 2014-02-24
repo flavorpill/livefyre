@@ -25,13 +25,13 @@ module Livefyre
       cookies.delete(name)
     end
 
-    # Public: Attempt to generate valid Livefire profile dump from the passed user record by guessing at field names.
+    # Public: Attempt to generate valid Livefyre profile dump from the passed user record by guessing at field names.
     #
     # user   - The user record to generate data from. Assumes it's ActiveModel-ish.
     # values - [Hash] of values to force values for, rather than guessing at.
     #
     # Returns [Hash] suitable for conversion to JSON
-    def livefire_profile(user, values = {})
+    def livefyre_profile(user, values = {})
       {
         :id            => user.id,
         :display_name  => user.try(:display_name) || user.try(:name) || user.try(:username),

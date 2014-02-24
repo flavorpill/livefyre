@@ -66,9 +66,9 @@ Of course, you need a matching controller action
 
       user = User.find(params[:id])
 
-      # livefile_profile will attempt to generate valid Livefire profile dump from the passed user record by guessing at field names.
+      # livefile_profile will attempt to generate valid Livefyre profile dump from the passed user record by guessing at field names.
       # You can pass overides in a hash as the second option, or you can always generate your own data structure.
-      render :json => livefire_profile(user, :image => user.profile_image_url).to_json
+      render :json => livefyre_profile(user, :image => user.profile_image_url).to_json
     end
 
 Finally, you'll need to set up a pull URL. Since this is done via the API, you are expected to do it manually. From a Rails console is fine, though
