@@ -21,7 +21,7 @@ module Livefyre
     # Raises [JSON::ParserError] if the returned data cannot be parsed
     # Raises [APIException] if the API does not return a valid response
     def profile
-      response = @client.get "/profile/#{id}/", {:actor_token => token}
+      response = @client.get "/profile/#{id}/", {:actor_token => @client.system_token}
       if response.success?
         begin
           JSON.parse(response.body)["data"]
