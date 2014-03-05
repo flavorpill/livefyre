@@ -129,5 +129,21 @@ module Livefyre
 
       JWT.encode(metadata, client.site_key)
     end
+
+    # Public: Fetch html fragment of a conversation
+    #
+    # article_id      - [String] Article id
+    #
+    # Returns [String] html fragment (should be cached)
+    # Raises [APIException] on failure
+    def self.seo_html_fragment(article_id)
+      client = Livefyre.client
+      response = client.bootstrap.get "/bs3/#{client.options[:network]}/#{client.options[:site_id]}/#{Base64.strict_encode64 article_id}/bootstrap.html"
+      if response.success?
+        response.body
+      else
+        raise APIException.new(response.body)
+      end
+    end
   end
 end
